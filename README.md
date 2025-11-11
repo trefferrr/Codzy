@@ -1,45 +1,90 @@
-# Codzy: A Code Editor
-A fully functional Code Editor using judge0 rapid-api.It compiles the code of more than 40
-programming languages and is able to execute a program for a different test case using custom
-input
+# Codzy
 
-# Getting Started with Create React App
+An in-browser multi-language code runner and editor powered by Monaco Editor and Judge0 CE (via RapidAPI). Write code, provide custom input, and run it across 40+ languages with a clean, responsive UI and dark/light themes.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Features
+- Multi-language support with syntax highlighting (Monaco)
+- One-click Run via Judge0 CE API
+- Custom input box (stdin)
+- Output panel with success/error states
+- Language-aware Hello World templates
+- Download current code with the correct file extension
+- Reset code to the language template
+- Dark/Light theme with elegant toggle
+- Responsive layout (editor left, input+output right)
 
-## Available Scripts
+## Tech Stack
+- React (Create React App)
+- Monaco Editor (`@monaco-editor/react`)
+- Tailwind CSS
+- Judge0 CE via RapidAPI
+- react-select (themed language dropdown)
+- react-toastify (notifications)
 
-In the project directory, you can run:
+## Getting Started
 
-### `npm start`
+1) Install dependencies
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm install
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+2) Configure environment variables
 
-### `npm test`
+Create a file named `.env.local` in the project root:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+REACT_APP_RAPIDAPI_HOST=judge0-ce.p.rapidapi.com
+REACT_APP_RAPIDAPI_KEY=your_rapidapi_key_here
+```
 
-### `npm run build`
+Notes:
+- React only exposes variables prefixed with `REACT_APP_`.
+- Restart the dev server after editing env files.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3) Run the app
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Open http://localhost:3000 in your browser.
 
-### `npm run eject`
+## Usage
+- Select a language from the dropdown; the editor loads a Hello World template for that language.
+- Enter input in the “Enter Input here” box if your program expects stdin.
+- Click Run to compile/execute via Judge0.
+- Download: saves the current code as `code.<ext>` (extension matches the selected language).
+- Reset: restores the Hello World template for the selected language.
+- Toggle theme using the sun/moon button.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Keyboard Tips
+- The Monaco editor supports common shortcuts like Ctrl/Cmd+S (no-op), multi-cursor edits, and search.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Project Structure (key files)
+- `src/Components/Landing.jsx`: main layout and actions (run, download, reset)
+- `src/Components/CodeEditor.jsx`: Monaco editor wrapper
+- `src/Components/OutputWindow.jsx`: output display
+- `src/Components/CustomInput.jsx`: stdin textarea
+- `src/Components/LanguageDropdown.jsx`: themed language selector
+- `src/Context/ThemeContext.js`: dark/light state
+- `src/Constants/HelloWorldTemplate.jsx`: language templates
+- `src/Constants/LanguageOption.jsx`: Judge0 language list
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Environment and Security
+- Do not commit your real RapidAPI key. Use `.env.local` (ignored by Git).
+- In production, ensure the key is stored securely in your hosting provider’s env settings.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Troubleshooting
+- API key missing: you’ll see a toast asking to set `REACT_APP_RAPIDAPI_KEY`.
+- 429 Too many requests: free RapidAPI tiers are limited. Consider your own Judge0 instance or a paid plan.
+- Editor not updating on language change: ensure `CodeEditor` receives updated `code` prop (already wired).
+- Changes to `.env.local` not applied: restart `npm start`.
+
+## Scripts
+- `npm start` — start dev server
+- `npm run build` — production build
+- `npm test` — run tests (if any)
+
+## License
+This project is provided as-is for educational purposes. Judge0 and dependent services have their own licenses/terms; please review them before production use.

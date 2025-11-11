@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css"
 import CodeEditor from './CodeEditor';
@@ -6,16 +6,17 @@ import OutputDetails from './OutputDetails';
 import OutputWindow from './OutputWindow';
 import axios from 'axios';
 import UseKeyPress from '../Hooks/UseKeyPress';
-import { FaPlay, FaPause,FaRedo } from 'react-icons/fa';
+import { FaPlay, FaPause, FaRedo, FaDownload } from 'react-icons/fa';
 import LanguageDropdown from './LanguageDropdown';
 import CustomInput from './CustomInput';
+import ThemeToggle from './ThemeToggle';
 import { classnames } from '../Utils/general';
 import { LanguageOption } from '../Constants/LanguageOption';
-const javascriptDefault = `
-console.log("Hello world")`;
+import { useTheme } from '../Context/ThemeContext';
+import { getHelloWorldTemplate } from '../Constants/HelloWorldTemplate';
 
 const Landing = () => {
-  const [code, setCode] = useState(javascriptDefault);
+  const [code, setCode] = useState(getHelloWorldTemplate('javascript'));
   const [customInput, setCustomInput] = useState("");
   const [outputDetails, setOutputDetails] = useState(null);
   const [processing, setProcessing] = useState(null);
@@ -26,10 +27,14 @@ const Landing = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [showEditor, setShowEditor] = useState(true);
   const timerRef = useRef(null);
+  const editorRef = useRef(null);
+
 
   const onSelectChange = (selectedOption) => {
     console.log("Selected Option...", selectedOption);
     setLanguage(selectedOption);
+    // Load the appropriate Hello World template for the selected language
+    setCode(getHelloWorldTemplate(selectedOption.value));
   };
 
   useEffect(() => {
@@ -133,6 +138,53 @@ const Landing = () => {
     });
   };
 
+  const fileExtensionByLanguage = (lang) => {
+    const map = {
+      javascript: 'js',
+      typescript: 'ts',
+      python: 'py',
+      java: 'java',
+      c: 'c',
+      cpp: 'cpp',
+      csharp: 'cs',
+      ruby: 'rb',
+      php: 'php',
+      go: 'go',
+      rust: 'rs',
+      kotlin: 'kt',
+      scala: 'scala',
+      perl: 'pl',
+      r: 'r',
+      bash: 'sh',
+      assembly: 'asm',
+      basic: 'bas',
+      cobol: 'cob',
+      lisp: 'lisp',
+      sql: 'sql',
+      swift: 'swift',
+      text: 'txt',
+    };
+    return map[lang] || 'txt';
+  };
+
+  const handleDownload = () => {
+    const ext = fileExtensionByLanguage(language?.value);
+    const filename = `code.${ext}`;
+    const blob = new Blob([code || ''], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleResetCode = () => {
+    const template = getHelloWorldTemplate(language?.value);
+    setCode(template);
+  };
+
   const CheckStatus = async (token) => {
      const options = {
       method: "GET",
@@ -194,6 +246,8 @@ const Landing = () => {
     });
   };
 
+  const { isDarkMode } = useTheme();
+  
   return (
     <>
       <ToastContainer
@@ -206,80 +260,127 @@ const Landing = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        theme={isDarkMode ? "dark" : "light"}
       />
-      <div className='h-2 absolute z-30 w-full bg-black'>
-        <div className="flex items-stretch">
-        <div className="flex-1 flex items-center justify-start ml-4 sm:ml-10 sm:mr-12">
-        <h1 className="font-bold text-lg sm:text-xl" style={{ fontFamily: 'Times New Roman', margin: 0, padding: 0 }}>
-      <span className="font-bold">{'</>'}</span>Codzy
-    </h1></div>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'} transition-colors duration-200`}>
+        <div className={`sticky top-0 z-30 w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
+          <div className="flex items-stretch p-3">
+            <div className="flex-1 flex items-center justify-start ml-4 sm:ml-10 sm:mr-12">
+              <h1 className="font-bold text-lg sm:text-xl" style={{ fontFamily: 'Poppins, sans-serif', margin: 0, padding: 0 }}>
+                <span className={`font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{'</>'}</span>
+                <span className={`${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Codzy</span>
+              </h1>
+            </div>
 
-          <div className="flex-1 flex items-center justify-center ml-4 ml-20 hidden sm:flex">
-            {/* Timer display */}
-            <div className="text-xl font-bold mr-2 sm:mr-4">{formatTime(timeElapsed)}</div>
+            <div className="flex-1 items-center justify-center ml-20 hidden sm:flex">
+              {/* Timer display */}
+              <div className={`text-xl font-bold mr-2 sm:mr-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTime(timeElapsed)}</div>
 
-            {/* Start/Stop button */}
-            <button
-              onClick={timerRunning ? stopTimer : startTimer}
-              className="border-2 border-black z-10 rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0)] px-3 py-2 mr-2 hover:shadow transition duration-100 bg-green-600 flex-shrink-0 text-white"
-            >
-              {timerRunning ? <FaPause className="w-5 h-5" /> : <FaPlay className="w-5 h-5" />}
-            </button>
-            <button
-              onClick={resetTimer}
-              className="border-2 border-black z-10 rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0)] px-3 py-2 hover:shadow transition duration-100 bg-gray-500 flex-shrink-0 text-white"
-            >
-              <FaRedo className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 flex items-center justify-end px-2 sm:px-4 py-2">
-            <div className="px-2 sm:px-4 py-2 flex items-center space-x-2 sm:space-x-4 z-20">
-              <LanguageDropdown OnSelectChange={onSelectChange} className="w-full sm:w-auto"/>
+              {/* Start/Stop button */}
+              <button
+                onClick={timerRunning ? stopTimer : startTimer}
+                className={`border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} z-10 rounded-md shadow-sm px-3 py-2 mr-2 hover:shadow transition duration-100 ${timerRunning ? 'bg-gray-700' : 'bg-blue-600 border-blue-700 opacity-80'} flex-shrink-0 text-white`}
+              >
+                {timerRunning ? <FaPause className="w-5 h-5" /> : <FaPlay className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={resetTimer}
+                className={`border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} z-10 rounded-md shadow-sm px-3 py-2 hover:shadow transition duration-100 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-400'} flex-shrink-0 text-white`}
+              >
+                <FaRedo className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 flex items-center justify-end px-2 sm:px-4 py-2">
+              <ThemeToggle />
             </div>
           </div>
-        </div>
-        <div className='h-2 w-full bg-black'></div>
+          <div className={`h-1 w-full ${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'}`}></div>
         <div className='flex flex-col md:flex-row space-x-0 md:space-x-4 items-start px-2 py-4'>
-          <div className='flex flex-col w-full h-full justify-start items-start'>
-          <div className="w-full flex justify-end px-8 ">
-            <button
-              onClick={toggleView}
-              className={classnames(
-                "block md:hidden mr-2 border-2 border-black z-10 rounded-md shadow-[3px_2px_0px_0px_rgba(0,0,0)] px-2 py-2 sm:px-4 hover:shadow transition duration-200 bg-blue-600 flex-shrink-0 text-white",
-              )}
-            >
-              {showEditor ? "Output" : "Editor"}
-            </button>
-            <button
-              onClick={handleCompile}
-              disabled={!code}
-              className={classnames(
-                "border-2 border-black z-10 rounded-md shadow-[3px_2px_0px_0px_rgba(0,0,0)] px-2 py-2 sm:px-4 hover:shadow transition duration-200 bg-green-600 flex-shrink-0 text-white",
-                !code ? "opacity-50" : ""
-              )}
-            >
-              {processing ? "Processing..." : "Run"}
-            </button>
+          {/* LEFT: Editor section */}
+          <div className='flex flex-col w-full h-full justify-start items-start md:w-[61%]'>
+            {/* Editor header with language dropdown (like the screenshot) */}
+            <div className='w-full flex items-center justify-between px-2 sm:px-4 pb-2'>
+              <div className='flex items-center space-x-2'>
+                <LanguageDropdown OnSelectChange={onSelectChange} className="w-full sm:w-auto"/>
+              </div>
+              {/* Mobile toggle to switch to Output */}
+              <div className='flex md:hidden'>
+                <button
+                  onClick={toggleView}
+                  className={classnames(
+                    "mr-2 border rounded-md px-3 py-2 hover:shadow transition duration-200 text-white",
+                    isDarkMode ? "bg-blue-600 border-blue-700" : "bg-blue-500 border-blue-600"
+                  )}
+                >
+                  {showEditor ? "Output" : "Editor"}
+                </button>
+              </div>
+            </div>
+            <div className={`${showEditor ? 'block' : 'hidden'} md:block flex flex-col w-full h-full justify-start items-start`}>
+              <CodeEditor
+                code={code}
+                onChange={onChange}
+                language={language?.value}
+                editorRef={editorRef}
+              />
+            </div>
           </div>
-          <div className={`${showEditor ? 'block' : 'hidden'} md:block flex flex-col w-full h-full justify-start items-start`}>
-            <CodeEditor
-              code={code}
-              onChange={onChange}
-              language={language?.value}
-            />
+          {/* RIGHT: Controls, input and output */}
+          <div className={`${!showEditor ? 'block' : 'hidden'} md:block right-container flex flex-shrink-0 w-full md:w-[39%] flex-col`}>
+            {/* Right panel header with actions */}
+            <div className='w-full flex items-center justify-between px-2 sm:px-0 pb-3'>
+              <div className='flex-1'></div>
+              <div className='flex items-center space-x-2'>
+                <button
+                  onClick={handleCompile}
+                  disabled={!code}
+                  className={classnames(
+                    "border rounded-md px-4 py-2 hover:shadow transition duration-200 text-white",
+                    isDarkMode ? 
+                      (code ? "bg-blue-600 border-blue-700" : "bg-blue-600 border-blue-700 opacity-50") : 
+                      (code ? "bg-blue-600 border-blue-700" : "bg-blue-600 border-blue-700 opacity-50")
+                  )}
+                >
+                  {processing ? "Processing..." : "Run"}
+                </button>
+                <button
+                  onClick={handleDownload}
+                  title="Download code"
+                  className={classnames(
+                    "border rounded-md px-3 py-2 flex items-center justify-center transition duration-200",
+                    isDarkMode ? "text-white border-gray-600 hover:bg-gray-700" : "text-gray-800 border-gray-300 hover:bg-gray-100"
+                  )}
+                >
+                  <FaDownload className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleResetCode}
+                  title="Reset code"
+                  className={classnames(
+                    "border rounded-md px-3 py-2 flex items-center justify-center transition duration-200",
+                    isDarkMode ? "text-white border-gray-600 hover:bg-gray-700" : "text-gray-800 border-gray-300 hover:bg-gray-100"
+                  )}
+                >
+                  <FaRedo className="w-5 h-5" />
+                </button>
+                <button
+                />
+              </div>
+            </div>
+            <div className='flex flex-col mb-4'>
+              <CustomInput customInput={customInput} setCustomInput={setCustomInput} />
+              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                If your code takes input, add it in the above box before
+              </p>
+            </div>
+            <OutputWindow outputDetails={outputDetails} />
+            {outputDetails && <OutputDetails outputDetails={outputDetails} />}
           </div>
-        </div>
-        <div className={`${!showEditor ? 'block' : 'hidden'} md:block right-container flex flex-shrink-0 w-full md:w-[39%] flex-col`}>
-          <OutputWindow outputDetails={outputDetails} />
-          <div className='flex flex-col items-end'>
-            <CustomInput customInput={customInput} setCustomInput={setCustomInput} />
-          </div>
-          {outputDetails && <OutputDetails outputDetails={outputDetails} />}
-        </div>
         </div>
       </div>
+    </div>
     </>
-  );
+ );
 }
 
 export default Landing;
